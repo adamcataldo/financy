@@ -1,14 +1,23 @@
 from collections import namedtuple
+from datetime import datetime
+from fmp_data import FMPData
 from scipy.stats import bootstrap
 from scipy.stats import linregress
 from scipy.stats import t
 import numpy as np
 import pandas as pd
 
+    
+this_dir = "/Users/acataldo/Code/finance/financy"
+data_dir = f"{this_dir}/data"
+
+fmp = FMPData(this_dir)
+
+
 # Assumes file is in a csv file, named "{path}/{ticker}_quarterly_cash-flow.csv"
 # Assume Yahoo Finance Plus format, for quarterly cash flow data
 # Returns estimate in $BB
-def value_csv(ticker, path = "/Users/acataldo/Code/finance/FCF_analysis/data"):
+def value_csv(ticker, path = data_dir):
     annualized = extract_annualized(ticker, path)
     growth_estimate = estimate_growth(annualized)
     low_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.low) / 1e9
@@ -16,7 +25,7 @@ def value_csv(ticker, path = "/Users/acataldo/Code/finance/FCF_analysis/data"):
     IntrinsicValue = namedtuple('IntrinsicValue', ['low', 'high'])
     return IntrinsicValue(low_value, high_value)
 
-def extract_annualized(ticker, path = "/Users/acataldo/Code/finance/FCF_analysis/data"):
+def extract_annualized(ticker, path = data_dir):
     df = pd.read_csv(f"{path}/{ticker}_quarterly_cash-flow.csv")
     row = df[df.name == "FreeCashFlow"]
     formatted = row.transpose()[2:]
@@ -56,4 +65,3 @@ def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate = 0.0308):
     return value
 
 
-#Look into https://fmpcloud.io/plans
