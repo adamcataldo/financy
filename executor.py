@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 from queue import Queue
 from time import sleep
+import logging
 
 class Executor:
     def __init__(self, queries_per_minute):
@@ -15,5 +16,21 @@ class Executor:
                 wait_delta = first + timedelta(seconds=1, minutes=1) - now
                 sleep(wait_delta.total_seconds())
                 now = datetime.now()
+            logging.info("Sleeping")
         self.times_called.put(now)
         return query()
+    
+class RetryingExecutor():
+    def __init__(self, queries_per_minute, retries=3, retry_on=None):
+        self.executor = Executor(queries_per_minute)
+        self.retries = retries
+        self.retry_on = None
+    
+    def execute(self, query):
+        value = self.executor.execute(query)
+        retries = 0
+        while value == self.retry_on and retries < self.retries:
+            logging.info("Retrying")
+            sleep(2**retries)
+            value = self.executor.execute(query)
+        return value

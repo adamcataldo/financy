@@ -1,3 +1,4 @@
 data/*
 .apikey
 .ipynb_checkpoints/
+logs/*
