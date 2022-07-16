@@ -13,31 +13,6 @@ data_dir = f"{this_dir}/data"
 
 fmp = FMPData(this_dir)
 
-
-# Assumes file is in a csv file, named "{path}/{ticker}_quarterly_cash-flow.csv"
-# Assume Yahoo Finance Plus format, for quarterly cash flow data
-# Returns estimate in $BB
-def value_csv(ticker, path = data_dir):
-    annualized = extract_annualized(ticker, path)
-    growth_estimate = estimate_growth(annualized)
-    low_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.low) / 1e9
-    high_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.high) / 1e9
-    IntrinsicValue = namedtuple('IntrinsicValue', ['low', 'high'])
-    return IntrinsicValue(low_value, high_value)
-
-def extract_annualized(ticker, path = data_dir):
-    df = pd.read_csv(f"{path}/{ticker}_quarterly_cash-flow.csv")
-    row = df[df.name == "FreeCashFlow"]
-    formatted = row.transpose()[2:]
-    formatted.reset_index(inplace=True)
-    formatted.columns = ['quarter', 'free_cashflow']
-    formatted.quarter = pd.to_datetime(formatted.quarter, format = '%m/%d/%Y')
-    formatted.free_cashflow = formatted.replace(',','', regex=True).free_cashflow.astype(float)
-    annualized = formatted.groupby(formatted.index // 4).agg({'quarter':'max', 'free_cashflow':'sum'})
-    annualized.rename(columns = {'quarter':'year_ending'}, inplace = True)
-    last_five_years = annualized[0:5]
-    return last_five_years.sort_values('year_ending', ignore_index=True)
-    
 def estimate_growth(fcf_dataframe, confidence_level=0.5):
     df = fcf_dataframe.copy()
     if (df.free_cashflow.min() < 0):
@@ -55,7 +30,7 @@ def estimate_growth_negative_fcf(df, confidence_level=0.5):
     latest = df.free_cashflow[len(df.free_cashflow)-1]
     GrowthEstimate = namedtuple('GrowthEstimate', ['low', 'high'])
     return GrowthEstimate(slope_low / latest, slope_high / latest)
-    
+
 def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate = 0.0308):
     years = 10
     value = 0.0
@@ -63,6 +38,23 @@ def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate = 0.0308):
         weight = (1 + fcf_growth_rate) / (1 + treasury_rate)
         value = value + latest_fcf * weight**year
     return value
+
+def annualize_fcf(quarterly_fcf_df):
+    annualized = quarterly_fcf_df.groupby(quarterly_fcf_df.index // 4).agg({'free_cashflow':'sum'})
+    return annualized.loc[::-1].reset_index(drop=True)
+
+def value_asset(market_cap, quarterly_fcf):
+    annualized_fcf = annualize_fcf(quarterly_fcf)
+    growth_estimate = estimate_growth(annualized_fcf)
+    low_value = intrinsic_value(annualized_fcf.free_cashflow.iloc[-1], growth_estimate.low)
+    high_value = intrinsic_value(annualized_fcf.free_cashflow.iloc[-1], growth_estimate.high)
+    IntrinsicValue = namedtuple('IntrinsicValue', ['low_valuation', 'high_valuation', 'market_cap'])
+    return IntrinsicValue(low_value, high_value, market_cap)
+    
+def value_stock(ticker):
+    market_cap = fmp.market_cap(ticker)
+    quarterly_fcf = fmp.historic_fcf(ticker).free_cashflow    
+    return value_asset(market_cap, quarterly_fcf)
 
 def sp_500_fcf():
     years = 5
@@ -87,15 +79,7 @@ def sp_500_market_cap():
         market_cap += stock_market_cap
     return market_cap
 
-def annualize_fcf(quarterly_fcf_df):
-    annualized = quarterly_fcf_df.groupby(quarterly_fcf_df.index // 4).agg({'free_cashflow':'sum'})
-    return annualized.loc[::-1].reset_index(drop=True)
-
 def value_sp_500():
     market_cap = sp_500_market_cap()
-    annualized = annualize_fcf(sp_500_fcf())
-    growth_estimate = estimate_growth(annualized)
-    low_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.low)
-    high_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.high)
-    IntrinsicValue = namedtuple('IntrinsicValue', ['low', 'high', 'market_cap'])
-    return IntrinsicValue(low_value, high_value, market_cap)
+    quarterly_fcf = sp_500_fcf()
+    return value_asset(market_cap, quarterly_fcf)
