@@ -1,6 +1,6 @@
 from collections import namedtuple
-from datetime import datetime
 from fmp_data import FMPData
+from marketwatch_data import treasury_rate_10_yr
 from scipy.stats import bootstrap
 from scipy.stats import linregress
 from scipy.stats import t
@@ -12,6 +12,8 @@ this_dir = "/Users/acataldo/Code/finance/financy"
 data_dir = f"{this_dir}/data"
 
 fmp = FMPData(this_dir)
+
+treasury_rate = treasury_rate_10_yr()
 
 def estimate_growth(fcf, confidence_level=0.5):
     if (fcf.min() < 0):
@@ -30,7 +32,7 @@ def estimate_growth_negative_fcf(fcf, confidence_level=0.5):
     GrowthEstimate = namedtuple('GrowthEstimate', ['low', 'high'])
     return GrowthEstimate(slope_low / latest, slope_high / latest)
 
-def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate = 0.0308):
+def intrinsic_value(latest_fcf, fcf_growth_rate):
     years = 10
     value = 0.0
     for year in range(1, years+1):
@@ -55,10 +57,9 @@ def value_stock(ticker):
     quarterly_fcf = fmp.historic_fcf(ticker).free_cashflow    
     return value_asset(market_cap, quarterly_fcf)
 
-def sp_500_fcf():
+def etf_fcf(constituents):
     years = 5
     quarters = years * 4
-    constituents = sp_500_constituents()
     fcf = pd.Series([0.0] * quarters)
     for stock in constituents:
         stock_fcf = fmp.historic_fcf(stock).free_cashflow
@@ -70,8 +71,7 @@ def sp_500_fcf():
         fcf += stock_fcf
     return fcf
 
-def sp_500_market_cap():
-    constituents = sp_500_constituents()
+def etf_market_cap(constituents):
     market_cap = 0.0
     for stock in constituents:
         stock_market_cap = fmp.market_cap(stock)
@@ -79,6 +79,7 @@ def sp_500_market_cap():
     return market_cap
 
 def value_sp_500():
-    market_cap = sp_500_market_cap()
-    quarterly_fcf = sp_500_fcf()
+    constituents = sp_500_constituents()
+    market_cap = etf_market_cap(constituents)
+    quarterly_fcf = etf_fcf(constituents)
     return value_asset(market_cap, quarterly_fcf)
