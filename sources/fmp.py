@@ -5,7 +5,7 @@ import pandas as pd
 
 api_calls_per_minute = 300
 
-class FMPData:
+class FMP:
     def __init__(self, this_dir):
         with open(f"{this_dir}/.apikey") as f:
             self.apikey = f.read().strip()
@@ -16,7 +16,7 @@ class FMPData:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
-    
+
     # Source https://fmpcloud.io/
     def market_cap(self, symbol):
         symbol = symbol.replace(".", "-")

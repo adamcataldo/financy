@@ -1,7 +1,7 @@
 from collections import namedtuple
-from fmp_data import FMPData
-from index_constituents_data import etf_constituents
-from marketwatch_data import treasury_rate_10_yr
+from sources import FMP
+from sources import index_constituents
+from sources import treasury_rate_10_yr
 from scipy.stats import bootstrap
 from scipy.stats import linregress
 from scipy.stats import t
@@ -11,7 +11,7 @@ import pandas as pd
 this_dir = "/Users/acataldo/Code/finance/financy"
 data_dir = f"{this_dir}/data"
 
-fmp = FMPData(this_dir)
+fmp = FMP(this_dir)
 
 treasury_rate = treasury_rate_10_yr()
 
@@ -79,7 +79,7 @@ def etf_market_cap(constituents):
     return market_cap
 
 def value_etf(index):
-    constituents = etf_constituents(index)
+    constituents = index_constituents(index)
     market_cap = etf_market_cap(constituents)
     quarterly_fcf = etf_fcf(constituents)
     return value_asset(market_cap, quarterly_fcf)

@@ -9,7 +9,7 @@ def nasdaq_100_constituents():
     x = pd.read_html("https://en.wikipedia.org/wiki/Nasdaq-100#Components")
     return x[3].Ticker
 
-def etf_constituents(etf):
+def index_constituents(etf):
     fns = {'SPX' : sp_500_constituents,
            'NDX' : nasdaq_100_constituents}
     return fns[etf]()
