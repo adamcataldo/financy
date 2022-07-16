@@ -95,7 +95,7 @@ def value_sp_500():
     market_cap = sp_500_market_cap()
     annualized = annualize_fcf(sp_500_fcf())
     growth_estimate = estimate_growth(annualized)
-    low_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.low) / 1e9
-    high_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.high) / 1e9
+    low_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.low)
+    high_value = intrinsic_value(annualized.free_cashflow.iloc[-1], growth_estimate.high)
     IntrinsicValue = namedtuple('IntrinsicValue', ['low', 'high', 'market_cap'])
     return IntrinsicValue(low_value, high_value, market_cap)
