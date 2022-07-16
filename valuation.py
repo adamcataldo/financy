@@ -1,10 +1,10 @@
 from collections import namedtuple
 from fmp_data import FMPData
+from index_constituents_data import etf_constituents
 from marketwatch_data import treasury_rate_10_yr
 from scipy.stats import bootstrap
 from scipy.stats import linregress
 from scipy.stats import t
-from wikipedia_data import sp_500_constituents
 import numpy as np
 import pandas as pd
 
@@ -78,8 +78,8 @@ def etf_market_cap(constituents):
         market_cap += stock_market_cap
     return market_cap
 
-def value_sp_500():
-    constituents = sp_500_constituents()
+def value_etf(index):
+    constituents = etf_constituents(index)
     market_cap = etf_market_cap(constituents)
     quarterly_fcf = etf_fcf(constituents)
     return value_asset(market_cap, quarterly_fcf)
