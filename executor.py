@@ -16,7 +16,7 @@ class Executor:
                 wait_delta = first + timedelta(seconds=1, minutes=1) - now
                 sleep(wait_delta.total_seconds())
                 now = datetime.now()
-            logging.info("Sleeping")
+            logging.debug("Sleeping")
         self.times_called.put(now)
         return query()
     
@@ -30,7 +30,7 @@ class RetryingExecutor():
         value = self.executor.execute(query)
         retries = 0
         while value == self.retry_on and retries < self.retries:
-            logging.info("Retrying")
+            logging.debug("Retrying")
             sleep(2**retries)
             value = self.executor.execute(query)
         return value

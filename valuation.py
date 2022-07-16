@@ -13,21 +13,20 @@ data_dir = f"{this_dir}/data"
 
 fmp = FMPData(this_dir)
 
-def estimate_growth(fcf_dataframe, confidence_level=0.5):
-    df = fcf_dataframe.copy()
-    if (df.free_cashflow.min() < 0):
-        return estimate_growth_negative_fcf(df, confidence_level=0.5)
-    df['fcf_pct_change'] = df.free_cashflow.pct_change()
-    est = bootstrap((df.fcf_pct_change.dropna(),), np.mean, confidence_level=confidence_level)
+def estimate_growth(fcf, confidence_level=0.5):
+    if (fcf.min() < 0):
+        return estimate_growth_negative_fcf(fcf, confidence_level=confidence_level)
+    pct_change = fcf.pct_change()
+    est = bootstrap((pct_change.dropna(),), np.mean, confidence_level=confidence_level)
     GrowthEstimate = namedtuple('GrowthEstimate', ['low', 'high'])
     return GrowthEstimate(est.confidence_interval.low, est.confidence_interval.high)
 
-def estimate_growth_negative_fcf(df, confidence_level=0.5):
-    lr = linregress(df.index, df.free_cashflow)
-    ts = abs(t.ppf((1 - confidence_level)/2, len(df.free_cashflow) - 2))
+def estimate_growth_negative_fcf(fcf, confidence_level=0.5):
+    lr = linregress(fcf.index, fcf)
+    ts = abs(t.ppf((1 - confidence_level)/2, len(fcf) - 2))
     slope_low = lr.slope - ts*lr.stderr
     slope_high = lr.slope + ts*lr.stderr
-    latest = df.free_cashflow[len(df.free_cashflow)-1]
+    latest = fcf[len(fcf)-1]
     GrowthEstimate = namedtuple('GrowthEstimate', ['low', 'high'])
     return GrowthEstimate(slope_low / latest, slope_high / latest)
 
@@ -39,15 +38,15 @@ def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate = 0.0308):
         value = value + latest_fcf * weight**year
     return value
 
-def annualize_fcf(quarterly_fcf_df):
-    annualized = quarterly_fcf_df.groupby(quarterly_fcf_df.index // 4).agg({'free_cashflow':'sum'})
+def annualize_fcf(quarterly_fcf):
+    annualized = quarterly_fcf.groupby(quarterly_fcf.index // 4).sum()
     return annualized.loc[::-1].reset_index(drop=True)
 
 def value_asset(market_cap, quarterly_fcf):
     annualized_fcf = annualize_fcf(quarterly_fcf)
     growth_estimate = estimate_growth(annualized_fcf)
-    low_value = intrinsic_value(annualized_fcf.free_cashflow.iloc[-1], growth_estimate.low)
-    high_value = intrinsic_value(annualized_fcf.free_cashflow.iloc[-1], growth_estimate.high)
+    low_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.low)
+    high_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.high)
     IntrinsicValue = namedtuple('IntrinsicValue', ['low_valuation', 'high_valuation', 'market_cap'])
     return IntrinsicValue(low_value, high_value, market_cap)
     
@@ -69,7 +68,7 @@ def sp_500_fcf():
             zero_pad = pd.Series([0.0] * (quarters - len(stock_fcf)))
             stock_fcf = pd.concat([stock_fcf, zero_pad], ignore_index = True)
         fcf += stock_fcf
-    return pd.DataFrame(fcf, columns=['free_cashflow'])
+    return fcf
 
 def sp_500_market_cap():
     constituents = sp_500_constituents()
