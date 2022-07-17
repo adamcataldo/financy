@@ -49,8 +49,9 @@ def value_asset(market_cap, quarterly_fcf):
     growth_estimate = estimate_growth(annualized_fcf)
     low_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.low)
     high_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.high)
-    IntrinsicValue = namedtuple('IntrinsicValue', ['low_valuation', 'high_valuation', 'market_cap'])
-    return IntrinsicValue(low_value, high_value, market_cap)
+    expected_growth_rate = annualized_fcf.pct_change().dropna().mean()
+    IntrinsicValue = namedtuple('IntrinsicValue', ['low_valuation', 'high_valuation', 'market_cap', 'expected_growth_rate'])
+    return IntrinsicValue(low_value, high_value, market_cap, expected_growth_rate)
     
 def value_stock(ticker):
     market_cap = fmp.market_cap(ticker)
