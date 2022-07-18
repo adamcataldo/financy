@@ -25,6 +25,16 @@ class FMP:
         value = self.executor.execute(query)
         return value[0]['mktCap']
 
+    def enterprise_value(self, symbol):
+        symbol = symbol.replace(".", "-")
+        query = lambda : fmp.balance_sheet_statement(apikey=self.apikey, symbol=symbol, period="quarter", limit=1)
+        balance_sheet = self.executor.execute(query)[0]
+        logging.info(f"fetched balance_sheet for {symbol}")
+        debt = balance_sheet['totalDebt']
+        cash = balance_sheet['cashAndCashEquivalents']
+        market_cap = self.market_cap(symbol)
+        return market_cap + debt - cash
+
     # Source https://fmpcloud.io/
     # Period in ["annual", "quarter"]
     def historic_fcf(self, symbol, period="quarter", limit=20):

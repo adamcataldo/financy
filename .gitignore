@@ -4,3 +4,4 @@ logs/*
 *.ipynb
 .idea
 reports/*
+.DS_Store
