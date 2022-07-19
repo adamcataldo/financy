@@ -13,8 +13,8 @@ def rate_stock(buy_hold_sell, stock, liq):
         ba = liq.bid_ask(stock)
         illiquidity = (ba.ask - ba.bid) / ba.ask
         if iv.enterprise_value < iv.low_valuation:
-            undervalued_by = (iv.low_valuation - iv.enterprise_value) / (iv.high_valuation - iv.low_valuation)
-            rating = undervalued_by + iv.expected_growth_rate - illiquidity
+            valuation_growth = iv.enterprise_value / iv.low_valuation
+            rating = ((1 + iv.expected_growth_rate)**10 * (valuation_growth - illiquidity))**(1/10) - 1
             buy_hold_sell[0].append((stock,
                                      rating,
                                      iv.expected_growth_rate,
@@ -23,8 +23,8 @@ def rate_stock(buy_hold_sell, stock, liq):
                                      iv.high_valuation,
                                      1 - illiquidity))
         elif iv.enterprise_value > iv.high_valuation:
-            overvalued_by = (iv.enterprise_value - iv.low_valuation) / (iv.high_valuation - iv.low_valuation)
-            rating = overvalued_by + illiquidity - iv.expected_growth_rate
+            valuation_shrinkage = iv.high_valuation / iv.enterprise_value
+            rating = ((1 + iv.expected_growth_rate)**10 * (valuation_shrinkage - illiquidity))**(1/10) - 1
             buy_hold_sell[2].append((stock,
                                      rating,
                                      iv.expected_growth_rate,

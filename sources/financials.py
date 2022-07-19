@@ -1,3 +1,4 @@
+from datetime import datetime
 from executor import RetryingExecutor
 import fmpsdk as fmp
 import logging
@@ -17,7 +18,6 @@ class FMP:
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
 
-    # Source https://fmpcloud.io/
     def market_cap(self, symbol):
         symbol = symbol.replace(".", "-")
         query = lambda : fmp.company_profile(apikey=self.apikey, symbol=symbol)
@@ -35,12 +35,19 @@ class FMP:
         market_cap = self.market_cap(symbol)
         return market_cap + debt - cash
 
-    # Source https://fmpcloud.io/
     # Period in ["annual", "quarter"]
     def historic_fcf(self, symbol, period="quarter", limit=20):
         symbol = symbol.replace(".", "-")
         query = lambda : fmp.cash_flow_statement(apikey=self.apikey, symbol=symbol, period=period, limit=20)
         logging.info(f"fetched historic FCF for {symbol}")
         statements = self.executor.execute(query)
-        data = [(x['date'], x['freeCashFlow']) for x in statements]
+        data = [(datetime.strptime(x['date'], '%Y-%m-%d'), x['freeCashFlow']) for x in statements]
         return pd.DataFrame(data, columns=[period, 'free_cashflow'])
+
+    def historic_ocf(self, symbol, period="quarter", limit=20):
+        symbol = symbol.replace(".", "-")
+        query = lambda : fmp.cash_flow_statement(apikey=self.apikey, symbol=symbol, period=period, limit=20)
+        logging.info(f"fetched historic FCF for {symbol}")
+        statements = self.executor.execute(query)
+        data = [(datetime.strptime(x['date'], '%Y-%m-%d'), x['operatingCashFlow']) for x in statements]
+        return pd.DataFrame(data, columns=[period, 'operating_cashflow'])
