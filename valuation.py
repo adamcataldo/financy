@@ -83,11 +83,17 @@ def quarter_statement_date_dq(dates):
         raise DataQualityError(f"Found two quarters seperated by only {x.days} days")
 
 
+def adjusted_freecashflow(ocf_series, capex_series):
+    weights = ocf_series / ocf_series.sum()
+    adjusted_capex = capex_series.sum() * weights
+    return ocf_series - adjusted_capex
+
+
 def value_stock(ticker):
     enterprise_value = fmp.enterprise_value(ticker)
-    quarterly_fcf = fmp.historic_fcf(ticker)
-    quarter_statement_date_dq(quarterly_fcf.quarter)
-    quarterly_fcf = quarterly_fcf.free_cashflow
+    historic_cashflow = fmp.historic_cashflow(ticker)
+    quarter_statement_date_dq(historic_cashflow.quarter)
+    quarterly_fcf = adjusted_freecashflow(historic_cashflow.operating_cashflow, historic_cashflow.capex)
     return value_asset(enterprise_value, quarterly_fcf)
 
 
@@ -120,8 +126,3 @@ def value_etf(index):
     market_cap = etf_market_cap(constituents)
     quarterly_fcf = etf_fcf(constituents)
     return value_asset(market_cap, quarterly_fcf)
-
-def adjusted_freecashflow(ocf_series, capex_series):
-    weights = ocf_series / ocf_series.sum()
-    adjusted_capex = capex_series.sum() * weights
-    return ocf_series - adjusted_capex

@@ -43,7 +43,7 @@ def sp_500_report():
     stocks = sources.index_constituents('SPX')
     buy_hold_sell = ([], [], [], [])
     with sources.Liquidity() as liq:
-        for stock in stocks[0:1]:
+        for stock in stocks:
             rate_stock(buy_hold_sell, stock, liq)
     buy_columns = ['ticker',
                    'undervalued_rating',
