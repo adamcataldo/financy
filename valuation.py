@@ -9,10 +9,7 @@ from scipy.stats import t
 import numpy as np
 import pandas as pd
 
-this_dir = "/Users/acataldo/Code/finance/financy"
-data_dir = f"{this_dir}/data"
-
-fmp = FMP(this_dir)
+fmp = FMP()
 
 treasury_rate = treasury_rate_10_yr()
 
@@ -123,3 +120,8 @@ def value_etf(index):
     market_cap = etf_market_cap(constituents)
     quarterly_fcf = etf_fcf(constituents)
     return value_asset(market_cap, quarterly_fcf)
+
+def adjusted_freecashflow(ocf_series, capex_series):
+    weights = ocf_series / ocf_series.sum()
+    adjusted_capex = capex_series.sum() * weights
+    return ocf_series - adjusted_capex

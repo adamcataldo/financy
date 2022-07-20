@@ -5,3 +5,4 @@ logs/*
 .idea
 reports/*
 .DS_Store
+config/*

@@ -1,11 +1,11 @@
 from datetime import datetime
+import config
 import logging
 import pandas as pd
 import sources
 import valuation
 
-reports_dir = "/Users/acataldo/Code/finance/financy/reports"
-
+reports_dir = config.reports_dir
 
 def rate_stock(buy_hold_sell, stock, liq):
     try:
@@ -43,7 +43,7 @@ def sp_500_report():
     stocks = sources.index_constituents('SPX')
     buy_hold_sell = ([], [], [], [])
     with sources.Liquidity() as liq:
-        for stock in stocks:
+        for stock in stocks[0:1]:
             rate_stock(buy_hold_sell, stock, liq)
     buy_columns = ['ticker',
                    'undervalued_rating',
