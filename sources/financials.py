@@ -37,15 +37,6 @@ class FMP:
         return market_cap + debt - cash
 
     # Period in ["annual", "quarter"]
-    def historic_fcf(self, symbol, period="quarter", limit=20):
-        symbol = symbol.replace(".", "-")
-        query = lambda: fmp.cash_flow_statement(apikey=self.apikey, symbol=symbol, period=period, limit=20)
-        logging.info(f"fetched historic FCF for {symbol}")
-        statements = self.executor.execute(query)
-        data = [(datetime.strptime(x['date'], '%Y-%m-%d'), x['freeCashFlow']) for x in statements]
-        return pd.DataFrame(data, columns=[period, 'free_cashflow'])
-
-    # Period in ["annual", "quarter"]
     def historic_cashflow(self, symbol, period="quarter", limit=20):
         symbol = symbol.replace(".", "-")
         query = lambda: fmp.cash_flow_statement(apikey=self.apikey, symbol=symbol, period=period, limit=20)

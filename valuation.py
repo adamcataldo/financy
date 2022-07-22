@@ -60,11 +60,13 @@ def intrinsic_value(latest_fcf, fcf_growth_rate):
 
 
 def annualize_fcf(quarterly_fcf):
+    if len(quarterly_fcf) % 4 != 0:
+        quarterly_fcf = quarterly_fcf[0:(len(quarterly_fcf) // 4) * 4]
     annualized = quarterly_fcf.groupby(quarterly_fcf.index // 4).sum()
     return annualized.loc[::-1].reset_index(drop=True)
 
 
-def value_asset_with_negative_fcf(enterprise_value: float, annualized_fcf: pd.Series, confidence_level: float=0.5):
+def value_asset_linear_regression(enterprise_value: float, annualized_fcf: pd.Series, confidence_level: float=0.5):
     lr = linregress(annualized_fcf.index, annualized_fcf)
     ts = abs(t.ppf((1 - confidence_level) / 2, len(annualized_fcf) - 2))
     slope_low = lr.slope - ts * lr.stderr
@@ -90,8 +92,8 @@ def value_asset_with_negative_fcf(enterprise_value: float, annualized_fcf: pd.Se
 
 def value_asset(enterprise_value, quarterly_fcf):
     annualized_fcf = annualize_fcf(quarterly_fcf)
-    if annualized_fcf.min() < 0:
-        return value_asset_with_negative_fcf(enterprise_value, annualized_fcf)
+    if annualized_fcf.min() < 0 or annualized_fcf.pct_change().max() >= 9.0:
+        return value_asset_linear_regression(enterprise_value, annualized_fcf)
     growth_estimate = estimate_growth(annualized_fcf)
     low_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.low)
     high_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.high)
@@ -124,7 +126,7 @@ def etf_fcf(constituents):
     quarters = years * 4
     fcf = pd.Series([0.0] * quarters)
     for stock in constituents:
-        stock_fcf = fmp.historic_fcf(stock).free_cashflow
+        stock_fcf = fmp.historic_cashflow(stock).free_cashflow
         if len(stock_fcf) > quarters:
             stock_fcf = stock_fcf[0:quarters]
         if len(stock_fcf) < quarters:
