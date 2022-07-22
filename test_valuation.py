@@ -4,6 +4,7 @@ import unittest
 import valuation as v
 import warnings
 
+
 class TestValuation(unittest.TestCase):
 
     def test_annualize_fcf(self):
