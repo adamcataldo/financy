@@ -7,33 +7,43 @@ import valuation
 
 reports_dir = config.reports_dir
 
-def rate_stock(buy_hold_sell, stock, liq):
+BUY = 0
+HOLD = 1
+SELL = 2
+
+
+def rate_stock(iv, ba, stock):
+    illiquidity = (ba.ask - ba.bid) / ba.ask
+    if iv.enterprise_value < iv.low_valuation:
+        valuation_growth = iv.enterprise_value / iv.low_valuation
+        rating = ((1 + iv.expected_growth_rate) ** 10 * (valuation_growth - illiquidity)) ** (1 / 10) - 1
+        return (BUY, (stock,
+                      rating,
+                      iv.expected_growth_rate,
+                      iv.enterprise_value,
+                      iv.low_valuation,
+                      iv.high_valuation,
+                      1 - illiquidity))
+    elif iv.enterprise_value > iv.high_valuation:
+        valuation_shrinkage = iv.high_valuation / iv.enterprise_value
+        rating = ((1 + iv.expected_growth_rate) ** 10 * (valuation_shrinkage - illiquidity)) ** (1 / 10) - 1
+        return (SELL, (stock,
+                       rating,
+                       iv.expected_growth_rate,
+                       iv.enterprise_value,
+                       iv.low_valuation,
+                       iv.high_valuation,
+                       1 - illiquidity))
+    else:
+        return HOLD, stock
+
+
+def _rate_stock(buy_hold_sell, stock, liq):
     try:
         iv = valuation.value_stock(stock)
         ba = liq.bid_ask(stock)
-        illiquidity = (ba.ask - ba.bid) / ba.ask
-        if iv.enterprise_value < iv.low_valuation:
-            valuation_growth = iv.enterprise_value / iv.low_valuation
-            rating = ((1 + iv.expected_growth_rate)**10 * (valuation_growth - illiquidity))**(1/10) - 1
-            buy_hold_sell[0].append((stock,
-                                     rating,
-                                     iv.expected_growth_rate,
-                                     iv.enterprise_value,
-                                     iv.low_valuation,
-                                     iv.high_valuation,
-                                     1 - illiquidity))
-        elif iv.enterprise_value > iv.high_valuation:
-            valuation_shrinkage = iv.high_valuation / iv.enterprise_value
-            rating = ((1 + iv.expected_growth_rate)**10 * (valuation_shrinkage - illiquidity))**(1/10) - 1
-            buy_hold_sell[2].append((stock,
-                                     rating,
-                                     iv.expected_growth_rate,
-                                     iv.enterprise_value,
-                                     iv.low_valuation,
-                                     iv.high_valuation,
-                                     1 - illiquidity))
-        else:
-            buy_hold_sell[1].append(stock)
+        rating = rate_stock(iv, ba, stock)
+        buy_hold_sell[rating[0]].append(rating[1])
     except Exception as err:
         logging.error(f"Unexpected {err=} on {stock}, {type(err)=}")
         buy_hold_sell[3].append(stock)
@@ -44,7 +54,7 @@ def sp_500_report():
     buy_hold_sell = ([], [], [], [])
     with sources.Liquidity() as liq:
         for stock in stocks:
-            rate_stock(buy_hold_sell, stock, liq)
+            _rate_stock(buy_hold_sell, stock, liq)
     buy_columns = ['ticker',
                    'undervalued_rating',
                    'fcf_growth_rate',
