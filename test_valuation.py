@@ -44,6 +44,10 @@ class TestValuation(unittest.TestCase):
         self.assertEqual(1.0, x.low_valuation)
         self.assertEqual(1.0, x.high_valuation)
 
+    def test_value_asset_gt_1year_data(self):
+        x = v.value_asset(1.0, pd.Series([float(x) for x in range(1, 17)]))
+        self.assertTrue(x.low_valuation < x.high_valuation)
+
 if __name__ == '__main__':
     unittest.main()
 

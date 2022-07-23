@@ -11,6 +11,7 @@ reports_dir = config.reports_dir
 BUY = 0
 HOLD = 1
 SELL = 2
+ERROR = 3
 
 
 def rate_stock(iv, stock):
@@ -39,22 +40,22 @@ def rate_stock(iv, stock):
         return HOLD, stock
 
 
-def _rate_stock(buy_hold_sell, stock):
+def _rate_stock(stock):
     try:
         iv = valuation.value_stock(stock)
-        rating = rate_stock(iv, stock)
-        buy_hold_sell[rating[0]].append(rating[1])
+        return rate_stock(iv, stock)
     except Exception as err:
         logging.error(f"Unexpected error on {stock}")
         logging.error(traceback.format_exc())
-        buy_hold_sell[3].append(stock)
+        return ERROR, stock
 
 
 def sp_500_report():
     stocks = sources.index_constituents('SPX')
     buy_hold_sell = ([], [], [], [])
     for stock in stocks:
-        _rate_stock(buy_hold_sell, stock)
+        rating = _rate_stock(stock)
+        buy_hold_sell[rating[0]].append(rating[1])
     buy_columns = ['ticker',
                    'undervalued_rating',
                    'fcf_growth_rate',
