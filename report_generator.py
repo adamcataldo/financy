@@ -3,6 +3,7 @@ import config
 import logging
 import pandas as pd
 import sources
+import traceback
 import valuation
 
 reports_dir = config.reports_dir
@@ -13,7 +14,11 @@ SELL = 2
 
 
 def rate_stock(iv, ba, stock):
-    illiquidity = (ba.ask - ba.bid) / ba.ask
+    if ba.ask == 0.0 or ba.bid == 0.0:
+        illiquidity = 0.5
+        logging.warning(f"{stock} had unexpected bid-ask values: {ba}")
+    else:
+        illiquidity = (ba.ask - ba.bid) / ba.ask
     if iv.enterprise_value < iv.low_valuation:
         valuation_growth = iv.enterprise_value / iv.low_valuation
         rating = ((1 + iv.expected_growth_rate) ** 10 * (valuation_growth - illiquidity)) ** (1 / 10) - 1
@@ -45,7 +50,8 @@ def _rate_stock(buy_hold_sell, stock, liq):
         rating = rate_stock(iv, ba, stock)
         buy_hold_sell[rating[0]].append(rating[1])
     except Exception as err:
-        logging.error(f"Unexpected {err=} on {stock}, {type(err)=}")
+        logging.error(f"Unexpected error on {stock}")
+        logging.error(traceback.format_exc())
         buy_hold_sell[3].append(stock)
 
 

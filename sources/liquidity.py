@@ -1,4 +1,5 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from executor import RetryingExecutor
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -10,6 +11,12 @@ import logging
 
 def extract_amount(ba_str):
     return float(ba_str.split(" ")[0].replace("$", "").replace(",", ""))
+
+
+@dataclass
+class BidAsk:
+    bid: float
+    ask: float
 
 
 class Liquidity:
@@ -49,7 +56,6 @@ class Liquidity:
             ask_str = self.browser.find_element(By.XPATH, ask_path).text
             bid = extract_amount(bid_str)
             ask = extract_amount(ask_str)
-            BidAsk = namedtuple('BidAsk', field_names=['bid', 'ask'])
             return BidAsk(bid, ask)
         except Exception as err:
             logging.error(f"Unexpected {err=} on {symbol}, {type(err)=}")
