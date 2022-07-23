@@ -15,7 +15,10 @@ SELL = 2
 
 def rate_stock(iv, stock):
     if iv.enterprise_value < iv.low_valuation:
-        valuation_growth = iv.enterprise_value / iv.low_valuation
+        if iv.low_valuation <= 0:
+            valuation_growth = 1.0
+        else:
+            valuation_growth = iv.enterprise_value / iv.low_valuation
         rating = ((1 + iv.expected_growth_rate) ** 10 * valuation_growth) ** (1 / 10) - 1
         return (BUY, (stock,
                       rating,
