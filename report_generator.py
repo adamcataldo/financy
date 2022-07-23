@@ -60,8 +60,7 @@ def sp_500_report():
                    'fcf_growth_rate',
                    'enterprise_value',
                    'low_valuation',
-                   'high_valuation',
-                   'liquidity']
+                   'high_valuation']
     buy = pd.DataFrame(buy_hold_sell[0], columns=buy_columns)
     buy.sort_values('undervalued_rating', ascending=False, ignore_index=True, inplace=True)
     hold = pd.DataFrame(buy_hold_sell[1], columns=['ticker'])
@@ -71,8 +70,7 @@ def sp_500_report():
                     'fcf_growth_rate',
                     'enterprise_value',
                     'low_valuation',
-                    'high_valuation',
-                    'liquidity']
+                    'high_valuation']
     sell = pd.DataFrame(buy_hold_sell[2], columns=sell_columns)
     sell.sort_values('overvalued_rating', ascending=False, ignore_index=True, inplace=True)
     errors = pd.DataFrame(buy_hold_sell[3], columns=['ticker'])

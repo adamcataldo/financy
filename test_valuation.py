@@ -1,3 +1,5 @@
+from unittest import TestCase
+
 import pandas as pd
 import pandas.testing as pd_testing
 import unittest
@@ -9,16 +11,15 @@ class TestValuation(unittest.TestCase):
 
     def test_annualize_fcf(self):
         quarterly = pd.DataFrame([1.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 4.0],
-                              columns=['free_cashflow'])
+                                 columns=['free_cashflow'])
         expected = pd.DataFrame([12.0, 8.0], columns=['free_cashflow'])
         pd_testing.assert_frame_equal(v.annualize_fcf(quarterly), expected)
 
     def test_annualize_fcf_incomplete_years(self):
         quarterly = pd.DataFrame([1.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 4.0, 5.0],
-                              columns=['free_cashflow'])
+                                 columns=['free_cashflow'])
         expected = pd.DataFrame([12.0, 8.0], columns=['free_cashflow'])
         pd_testing.assert_frame_equal(v.annualize_fcf(quarterly), expected)
-
 
     def test_adjusted_fcf(self):
         ocf_series = pd.Series([1.0, 2.0, 3.0, 4.0])
@@ -37,5 +38,13 @@ class TestValuation(unittest.TestCase):
         v.value_asset(1000, pd.Series([1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0]))
         warnings.resetwarnings()
 
+    def test_value_asset_lt_1year_data(self):
+        x = v.value_asset(1.0, pd.Series([1.0, 2.0, 3.0]))
+        self.assertEqual(0, x.expected_growth_rate)
+        self.assertEqual(1.0, x.low_valuation)
+        self.assertEqual(1.0, x.high_valuation)
+
 if __name__ == '__main__':
     unittest.main()
+
+
