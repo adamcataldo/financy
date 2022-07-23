@@ -36,13 +36,6 @@ class ProjectedCashflows:
     high_projection: pd.Series
 
 
-class DataQualityError(Exception):
-
-    def __init__(self, message="DataQuality Error"):
-        self.message = message
-        super().__init__(self.message)
-
-
 def estimate_growth(annualized_fcf: pd.Series, confidence_level=0.5):
     pct_change = annualized_fcf.pct_change()
     est = bootstrap((pct_change.dropna(),), np.mean, confidence_level=confidence_level)
@@ -101,12 +94,6 @@ def value_asset(enterprise_value, quarterly_fcf):
     return IntrinsicValue(low_value, high_value, enterprise_value, expected_growth_rate)
 
 
-def quarter_statement_date_dq(dates):
-    x = -dates.diff().max()
-    if x < timedelta(days=88):
-        raise DataQualityError(f"Found two quarters seperated by only {x.days} days")
-
-
 def adjusted_freecashflow(ocf_series, capex_series):
     weights = ocf_series / ocf_series.sum()
     adjusted_capex = capex_series.sum() * weights
@@ -116,7 +103,6 @@ def adjusted_freecashflow(ocf_series, capex_series):
 def value_stock(ticker):
     enterprise_value = fmp.enterprise_value(ticker)
     historic_cashflow = fmp.historic_cashflow(ticker)
-    quarter_statement_date_dq(historic_cashflow.quarter)
     quarterly_fcf = adjusted_freecashflow(historic_cashflow.operating_cashflow, historic_cashflow.capex)
     return value_asset(enterprise_value, quarterly_fcf)
 
