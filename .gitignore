@@ -1,8 +1,2 @@
-.apikey
-.ipynb_checkpoints/
-logs/*
-*.ipynb
 .idea
-reports/*
 .DS_Store
-config/*
