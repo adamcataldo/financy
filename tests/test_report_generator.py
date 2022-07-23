@@ -1,6 +1,6 @@
 from unittest import TestCase
-from valuation import IntrinsicValue
-import report_generator as rg
+from financy.valuation import IntrinsicValue
+from financy import report_generator as rg
 
 
 class Test(TestCase):

@@ -1,9 +1,7 @@
-from unittest import TestCase
-
 import pandas as pd
 import pandas.testing as pd_testing
 import unittest
-import valuation as v
+from financy import valuation as v
 import warnings
 
 

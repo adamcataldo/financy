@@ -1,10 +1,10 @@
 from datetime import datetime
-import config
+from financy import config
+from financy import valuation
+from financy import sources
 import logging
 import pandas as pd
-import sources
 import traceback
-import valuation
 import warnings
 
 reports_dir = config.reports_dir

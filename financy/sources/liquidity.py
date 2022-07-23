@@ -1,6 +1,5 @@
-from collections import namedtuple
 from dataclasses import dataclass
-from executor import RetryingExecutor
+from financy.executor import RetryingExecutor
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By

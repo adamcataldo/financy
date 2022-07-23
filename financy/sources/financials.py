@@ -1,6 +1,6 @@
 from datetime import datetime
-from executor import RetryingExecutor
-import config
+from financy.executor import RetryingExecutor
+from financy import config
 import fmpsdk as fmp
 import logging
 import pandas as pd

@@ -4,6 +4,7 @@ from queue import Queue
 from time import sleep
 import logging
 
+
 class Executor:
     def __init__(self, queries_per_minute):
         self.times_called = Queue(queries_per_minute)
@@ -20,7 +21,8 @@ class Executor:
         self.times_called.put(now)
         result = query()
         return result
-    
+
+
 class RetryingExecutor():
     def __init__(self, queries_per_minute, retries=3, retry_on=None):
         self.executor = Executor(queries_per_minute)
