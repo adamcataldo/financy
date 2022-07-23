@@ -5,6 +5,7 @@ import pandas as pd
 import sources
 import traceback
 import valuation
+import warnings
 
 reports_dir = config.reports_dir
 
@@ -16,7 +17,7 @@ ERROR = 3
 
 def rate_stock(iv, stock):
     if iv.enterprise_value < iv.low_valuation:
-        if iv.low_valuation <= 0:
+        if iv.low_valuation <= 0 or iv.enterprise_value < 0:
             valuation_growth = 1.0
         else:
             valuation_growth = iv.enterprise_value / iv.low_valuation
@@ -42,8 +43,15 @@ def rate_stock(iv, stock):
 
 def _rate_stock(stock):
     try:
+        warnings.filterwarnings("error")
         iv = valuation.value_stock(stock)
-        return rate_stock(iv, stock)
+        rating = rate_stock(iv, stock)
+        warnings.resetwarnings()
+        return rating
+    except RuntimeWarning as rw:
+        logging.error(f"Unexpected warning on {stock}")
+        logging.error(traceback.format_exc())
+        return ERROR, stock
     except Exception as err:
         logging.error(f"Unexpected error on {stock}")
         logging.error(traceback.format_exc())

@@ -13,19 +13,19 @@ class TestValuation(unittest.TestCase):
         quarterly = pd.DataFrame([1.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 4.0],
                                  columns=['free_cashflow'])
         expected = pd.DataFrame([12.0, 8.0], columns=['free_cashflow'])
-        pd_testing.assert_frame_equal(v.annualize_fcf(quarterly), expected)
+        pd_testing.assert_frame_equal(expected, v.annualize_fcf(quarterly))
 
     def test_annualize_fcf_incomplete_years(self):
         quarterly = pd.DataFrame([1.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 4.0, 5.0],
                                  columns=['free_cashflow'])
         expected = pd.DataFrame([12.0, 8.0], columns=['free_cashflow'])
-        pd_testing.assert_frame_equal(v.annualize_fcf(quarterly), expected)
+        pd_testing.assert_frame_equal(expected, v.annualize_fcf(quarterly))
 
     def test_adjusted_fcf(self):
         ocf_series = pd.Series([1.0, 2.0, 3.0, 4.0])
         capex_series = pd.Series([0.0, 5.0, 0.0, 0.0])
         expected = pd.Series([0.5, 1.0, 1.5, 2.0])
-        pd_testing.assert_series_equal(v.adjusted_freecashflow(ocf_series, capex_series), expected)
+        pd_testing.assert_series_equal(expected, v.adjusted_freecashflow(ocf_series, capex_series))
 
     def test_value_asset_linear_regression_no_negative_valuations(self):
         x = v.value_asset_linear_regression(0, pd.Series([-1, -2, -3]))
@@ -40,9 +40,9 @@ class TestValuation(unittest.TestCase):
 
     def test_value_asset_lt_1year_data(self):
         x = v.value_asset(1.0, pd.Series([1.0, 2.0, 3.0]))
-        self.assertEqual(0, x.expected_growth_rate)
-        self.assertEqual(1.0, x.low_valuation)
-        self.assertEqual(1.0, x.high_valuation)
+        self.assertEqual(x.expected_growth_rate, 0)
+        self.assertEqual(x.low_valuation, 1.0)
+        self.assertEqual(x.high_valuation, 1.0)
 
     def test_value_asset_gt_1year_data(self):
         x = v.value_asset(1.0, pd.Series([float(x) for x in range(1, 17)]))

@@ -18,7 +18,8 @@ class Executor:
                 now = datetime.now()
             logging.debug("Sleeping")
         self.times_called.put(now)
-        return query()
+        result = query()
+        return result
     
 class RetryingExecutor():
     def __init__(self, queries_per_minute, retries=3, retry_on=None):
