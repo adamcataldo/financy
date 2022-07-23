@@ -10,6 +10,5 @@ else:
 fmp_api_calls_per_minute = 300
 with open(f"{local_financy}/.apikey") as f:
     fmp_apikey = f.read().strip()
-fmp_log = f"{local_financy}/logs/fmp.log"
 
 reports_dir = f"{local_financy}/reports"

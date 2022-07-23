@@ -12,12 +12,6 @@ class FMP:
     def __init__(self):
         self.apikey = config.fmp_apikey
         self.executor = RetryingExecutor(api_calls_per_minute)
-        logger = logging.getLogger()
-        handler = logging.FileHandler(filename=config.fmp_log, mode='w')
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
 
     def market_cap(self, symbol):
         symbol = symbol.replace(".", "-")
