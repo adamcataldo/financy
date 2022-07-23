@@ -84,7 +84,7 @@ def value_asset_linear_regression(enterprise_value: float, annualized_fcf: pd.Se
 
 
 def value_asset(enterprise_value, quarterly_fcf):
-    if len(quarterly_fcf) < 4:
+    if len(quarterly_fcf) < 12:
         return IntrinsicValue(enterprise_value, enterprise_value, enterprise_value, 0.0)
     annualized_fcf = annualize_fcf(quarterly_fcf)
     if annualized_fcf.min() < 0 or annualized_fcf.pct_change().max() >= 9.0:

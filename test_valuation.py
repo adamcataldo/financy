@@ -48,6 +48,10 @@ class TestValuation(unittest.TestCase):
         x = v.value_asset(1.0, pd.Series([float(x) for x in range(1, 17)]))
         self.assertTrue(x.low_valuation < x.high_valuation)
 
+    def test_value_asset_lt_3year_data(self):
+        x = v.value_asset(1.0, pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]))
+        self.assertTrue(x.low_valuation == x.high_valuation)
+
 if __name__ == '__main__':
     unittest.main()
 
