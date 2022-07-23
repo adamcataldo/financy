@@ -89,3 +89,8 @@ def sp_500_report():
     hold.to_csv(f"{reports_dir}/hold_sp500_{timestamp}.csv", index=False)
     sell.to_csv(f"{reports_dir}/sell_sp500_{timestamp}.csv", index=False)
     errors.to_csv(f"{reports_dir}/errors_sp500_{timestamp}.csv", index=False)
+
+
+def rate_etf(etf):
+    iv = valuation.value_etf(etf)
+    return rate_stock(iv, etf)
