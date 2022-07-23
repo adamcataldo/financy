@@ -13,41 +13,33 @@ HOLD = 1
 SELL = 2
 
 
-def rate_stock(iv, ba, stock):
-    if ba.ask == 0.0 or ba.bid == 0.0:
-        illiquidity = 0.5
-        logging.warning(f"{stock} had unexpected bid-ask values: {ba}")
-    else:
-        illiquidity = (ba.ask - ba.bid) / ba.ask
+def rate_stock(iv, stock):
     if iv.enterprise_value < iv.low_valuation:
         valuation_growth = iv.enterprise_value / iv.low_valuation
-        rating = ((1 + iv.expected_growth_rate) ** 10 * (valuation_growth - illiquidity)) ** (1 / 10) - 1
+        rating = ((1 + iv.expected_growth_rate) ** 10 * valuation_growth) ** (1 / 10) - 1
         return (BUY, (stock,
                       rating,
                       iv.expected_growth_rate,
                       iv.enterprise_value,
                       iv.low_valuation,
-                      iv.high_valuation,
-                      1 - illiquidity))
+                      iv.high_valuation))
     elif iv.enterprise_value > iv.high_valuation:
         valuation_shrinkage = iv.high_valuation / iv.enterprise_value
-        rating = ((1 + iv.expected_growth_rate) ** 10 * (valuation_shrinkage - illiquidity)) ** (1 / 10) - 1
+        rating = ((1 + iv.expected_growth_rate) ** 10 * valuation_shrinkage) ** (1 / 10) - 1
         return (SELL, (stock,
                        rating,
                        iv.expected_growth_rate,
                        iv.enterprise_value,
                        iv.low_valuation,
-                       iv.high_valuation,
-                       1 - illiquidity))
+                       iv.high_valuation))
     else:
         return HOLD, stock
 
 
-def _rate_stock(buy_hold_sell, stock, liq):
+def _rate_stock(buy_hold_sell, stock):
     try:
         iv = valuation.value_stock(stock)
-        ba = liq.bid_ask(stock)
-        rating = rate_stock(iv, ba, stock)
+        rating = rate_stock(iv, stock)
         buy_hold_sell[rating[0]].append(rating[1])
     except Exception as err:
         logging.error(f"Unexpected error on {stock}")
@@ -58,9 +50,8 @@ def _rate_stock(buy_hold_sell, stock, liq):
 def sp_500_report():
     stocks = sources.index_constituents('SPX')
     buy_hold_sell = ([], [], [], [])
-    with sources.Liquidity() as liq:
-        for stock in stocks:
-            _rate_stock(buy_hold_sell, stock, liq)
+    for stock in stocks:
+        _rate_stock(buy_hold_sell, stock)
     buy_columns = ['ticker',
                    'undervalued_rating',
                    'fcf_growth_rate',
