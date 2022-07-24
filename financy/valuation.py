@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from financy.sources import FMP
 from financy.sources import index_constituents
-from financy.sources import treasury_rate_10_yr
 from scipy.stats import bootstrap
 from scipy.stats import linregress
 from scipy.stats import t
@@ -10,7 +9,6 @@ import pandas as pd
 
 fmp = FMP()
 
-treasury_rate = treasury_rate_10_yr()
 projection_years = 10
 
 
@@ -43,7 +41,7 @@ def estimate_growth(annualized_fcf: pd.Series, confidence_level=0.5):
     return GrowthEstimate(est.confidence_interval.low, est.confidence_interval.high, expected_growth_rate)
 
 
-def intrinsic_value(latest_fcf, fcf_growth_rate):
+def intrinsic_value(latest_fcf, fcf_growth_rate, treasury_rate):
     value = 0.0
     for year in range(1, projection_years + 1):
         weight = (1 + fcf_growth_rate) / (1 + treasury_rate)
@@ -82,15 +80,15 @@ def value_asset_linear_regression(enterprise_value: float, annualized_fcf: pd.Se
     return IntrinsicValue(low_valuation, high_valuation, enterprise_value, expected_growth_rate)
 
 
-def value_asset(enterprise_value, quarterly_fcf):
+def value_asset(enterprise_value, quarterly_fcf, treasury_rate):
     if len(quarterly_fcf) < 12:
         return IntrinsicValue(enterprise_value, enterprise_value, enterprise_value, 0.0)
     annualized_fcf = annualize_fcf(quarterly_fcf)
     if annualized_fcf.min() < 0 or annualized_fcf.pct_change().max() >= 9.0:
         return value_asset_linear_regression(enterprise_value, annualized_fcf)
     growth_estimate = estimate_growth(annualized_fcf)
-    low_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.low)
-    high_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.high)
+    low_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.low, treasury_rate)
+    high_value = intrinsic_value(annualized_fcf.iloc[-1], growth_estimate.high, treasury_rate)
     expected_growth_rate = growth_estimate.expected_growth_rate
     return IntrinsicValue(low_value, high_value, enterprise_value, expected_growth_rate)
 
@@ -101,11 +99,11 @@ def adjusted_freecashflow(ocf_series, capex_series):
     return ocf_series - adjusted_capex
 
 
-def value_stock(ticker):
+def value_stock(ticker, treasury_rate):
     enterprise_value = fmp.enterprise_value(ticker)
     historic_cashflow = fmp.historic_cashflow(ticker)
     quarterly_fcf = adjusted_freecashflow(historic_cashflow.operating_cashflow, historic_cashflow.capex)
-    return value_asset(enterprise_value, quarterly_fcf)
+    return value_asset(enterprise_value, quarterly_fcf, treasury_rate)
 
 
 def etf_fcf(constituents):
@@ -131,7 +129,7 @@ def etf_market_cap(constituents):
     return market_cap
 
 
-def value_etf(index):
+def value_etf(index, treasury_rate):
     # FIXME: Change market cap to enterprise value
     constituents = index_constituents(index)
     market_cap = etf_market_cap(constituents)

@@ -44,7 +44,8 @@ def rate_stock(iv, stock):
 def _rate_stock(stock):
     try:
         warnings.filterwarnings("error")
-        iv = valuation.value_stock(stock)
+        treasury_rate = sources.treasury_rate_10_yr()
+        iv = valuation.value_stock(stock, treasury_rate)
         rating = rate_stock(iv, stock)
         warnings.resetwarnings()
         return rating
